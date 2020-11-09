@@ -235,8 +235,70 @@
                 // .domain([r0_max*1.05, r0_min*0.95])
                 .domain([2, 0])
                 .range([0, height - 50]);
-            
-            // Add scales to axes
+
+            // Create low and high percentiles area
+            svg.append("linearGradient")
+                .attr("id", "pastel_gradient")
+                .attr("gradientUnits", "userSpaceOnUse")
+                .attr("x1", 0)
+                .attr("y1", 0)
+                .attr("x2", 0)
+                .attr("y2", height)
+              .selectAll("stop")
+                .data([
+                    {offset: y_scale(1) / height, color: "#FCF2F2"},
+                    {offset: y_scale(1) / height, color: "#F2F9F0"}
+                ])
+              .join("stop")
+                .attr("offset", d => d.offset)
+                .attr("stop-color", d => d.color);
+            var area = d3.area()
+                .x((p) => x_scale(p[0]))
+                .y0((p) => y_scale(p[2]))
+                .y1((p) => y_scale(p[3]));
+            svg.append("path")
+                .attr("d", area(r0_array))
+                .attr("fill", "url(#pastel_gradient)")
+                .attr("transform", "translate(50, 20)");
+
+            // Create horizontal line at 1
+            svg.append("line")
+                .attr("x1", x_scale(r0_array[0][0]))
+                .attr("y1", y_scale(1))
+                .attr("x2", x_scale(r0_array[r0_array.length-1][0]))
+                .attr("y2", y_scale(1))
+                .attr("stroke", "#DDD")
+                .attr("stroke-width", 1)
+                .attr("transform", "translate(50, 20)");
+
+            // Create Rt line
+            var line = d3.line()
+                .curve(d3.curveMonotoneX)
+                .x((p) => x_scale(p[0]))
+                .y((p) => y_scale(p[1]));
+            var gradient = svg.append("linearGradient")
+                .attr("id", "gradient")
+                .attr("gradientUnits", "userSpaceOnUse")
+                .attr("x1", 0)
+                .attr("y1", 0)
+                .attr("x2", 0)
+                .attr("y2", height)
+              .selectAll("stop")
+                .data([
+                    {offset: y_scale(1) / height, color: "#eb5358"},
+                    {offset: y_scale(1) / height, color: "#35b32e"}
+                ])
+              .join("stop")
+                .attr("offset", d => d.offset)
+                .attr("stop-color", d => d.color);
+            svg.append("path")
+                .attr("d", line(r0_array))
+                .attr("fill", "none") 
+                .attr("stroke", 'url(#gradient)')
+                .attr("stroke-width", 2)
+                .attr("transform", "translate(50, 20)");
+
+            // Create axes
             var x_axis = d3.axisBottom()
                 .scale(x_scale);
             var y_axis = d3.axisLeft()
@@ -250,48 +312,6 @@
             svg.append("g")
                 .attr("transform", "translate(50, 20)")
                 .call(y_axis);
-
-            // Create Rt line
-            var line = d3.line()
-                .curve(d3.curveMonotoneX)
-                .x((p) => x_scale(p[0]))
-                .y((p) => y_scale(p[1]));
-            svg.append("path")
-                .attr("d", line(r0_array))
-                .attr("fill", "none") 
-                .attr("stroke", "#000")
-                .attr("transform", "translate(50, 20)");
-
-            // Create low and high percentiles lines
-            var l_80_line = d3.line()
-                .curve(d3.curveMonotoneX)
-                .x((p) => x_scale(p[0]))
-                .y((p) => y_scale(p[2]));
-            svg.append("path")
-                .attr("d", l_80_line(r0_array))
-                .attr("fill", "none") 
-                .attr("stroke", "#888")
-                .attr("transform", "translate(50, 20)");
-            var h_80_line = d3.line()
-                .curve(d3.curveMonotoneX)
-                .x((p) => x_scale(p[0]))
-                .y((p) => y_scale(p[3]));
-            svg.append("path")
-                .attr("d", h_80_line(r0_array))
-                .attr("fill", "none") 
-                .attr("stroke", "#888")
-                .attr("transform", "translate(50, 20)");
-
-            // Create horizontal line at 1
-            svg.append("line")
-                .attr("x1", x_scale(r0_array[0][0]))
-                .attr("y1", y_scale(1))
-                .attr("x2", x_scale(r0_array[r0_array.length-1][0]))
-                .attr("y2", y_scale(1))
-                .attr("stroke", "#DDD")
-                .attr("stroke-width", 1)
-                .attr("transform", "translate(50, 20)");
-
         }
         var request = new XMLHttpRequest();
         request.open('GET', "results.json");
